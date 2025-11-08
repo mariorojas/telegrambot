@@ -34,6 +34,8 @@ class WebhookView(APIView):
             logger.warning("Received invalid JSON payload from Telegram.")
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        logger.debug("Received Telegram payload: %s", payload)
+
         message = self._extract_text_message(payload)
         if not message:
             logger.debug("Ignoring update without text message: %s", payload.get("update_id"))
@@ -46,7 +48,7 @@ class WebhookView(APIView):
 
         greeting = self._prepare_greeting(message)
         if self._send_greeting(chat_id, greeting):
-            logger.info("Greeting sent to chat %s: %s", chat_id, greeting)
+            logger.debug("Greeting sent to chat %s: %s", chat_id, greeting)
         else:
             logger.error("Failed to send greeting to chat %s", chat_id)
         return Response(status=status.HTTP_200_OK)
