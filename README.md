@@ -12,6 +12,7 @@ This Django project exposes a webhook endpoint that receives Telegram updates an
    ```
    TELEGRAM_BOT_TOKEN=your-bot-token
    TELEGRAM_WEBHOOK_URL=https://public-host/telegram/webhook/  # optional
+   TELEGRAM_WEBHOOK_SECRET=some-long-random-string            # optional but recommended
    DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,beribboned-vickey-metrically.ngrok-free.dev
    ```
    These values are loaded automatically via `python-dotenv`. You can still override them with standard environment variables.
@@ -31,6 +32,8 @@ Run the provided management command once your public URL is ready:
 python manage.py setwebhook --url https://your-id.ngrok.app/telegram/webhook/
 ```
 If `TELEGRAM_WEBHOOK_URL` is set, you can omit `--url`.
+
+When `TELEGRAM_WEBHOOK_SECRET` is defined, the management command automatically appends `?secret=<value>` (or `&secret=` if other query params exist) to the URL sent to Telegram. Telegram will then include that query parameter in every webhook request, and the Django view will reject requests without the correct secret.
 
 ## Testing
 

@@ -1,3 +1,5 @@
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
@@ -23,8 +25,19 @@ class Command(BaseCommand):
         if not token:
             raise CommandError("TELEGRAM_BOT_TOKEN is missing; set it before registering the webhook.")
 
-        client = TelegramClient(token=token)
-        if not client.set_webhook(url):
-            raise CommandError(f"Failed to register webhook with Telegram using URL {url}")
+        secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
+        url_with_secret = self._append_secret(url, secret) if secret else url
 
-        self.stdout.write(self.style.SUCCESS(f"Webhook successfully set to {url}"))
+        client = TelegramClient(token=token)
+        if not client.set_webhook(url_with_secret):
+            raise CommandError(f"Failed to register webhook with Telegram using URL {url_with_secret}")
+
+        self.stdout.write(self.style.SUCCESS(f"Webhook successfully set to {url_with_secret}"))
+
+    @staticmethod
+    def _append_secret(url: str, secret: str) -> str:
+        parsed = urlparse(url)
+        query_params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        query_params["secret"] = secret
+        new_query = urlencode(query_params, doseq=True)
+        return urlunparse(parsed._replace(query=new_query))

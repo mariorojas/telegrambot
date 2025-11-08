@@ -24,6 +24,10 @@ class WebhookView(APIView):
     parser_classes = [JSONParser]
 
     def post(self, request, *args, **kwargs):
+        if not self._is_authorized(request):
+            logger.warning("Rejected webhook call due to missing/invalid secret.")
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         try:
             payload: Payload = request.data or {}
         except ParseError:
@@ -74,3 +78,10 @@ class WebhookView(APIView):
             logger.error("TELEGRAM_BOT_TOKEN is not configured; cannot respond.")
             return False
         return telegram_client.send_message(chat_id, greeting)
+
+    @staticmethod
+    def _is_authorized(request) -> bool:
+        secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
+        if not secret:
+            return True
+        return request.query_params.get("secret") == secret
