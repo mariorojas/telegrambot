@@ -30,7 +30,16 @@ SECRET_KEY = 'django-insecure-azj8#al44lr*z!_(eck=(y0zyrpb7@!xm0a&uh@##vwkpr&f9(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["beribboned-vickey-metrically.ngrok-free.dev"]
+default_hosts = [
+    "localhost",
+    "127.0.0.1",
+    "beribboned-vickey-metrically.ngrok-free.dev",
+]
+allowed_hosts_env = os.getenv("DJANGO_ALLOWED_HOSTS")
+if allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
+else:
+    ALLOWED_HOSTS = default_hosts
 
 
 # Application definition

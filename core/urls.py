@@ -4,4 +4,5 @@ from .views import WebhookView
 
 urlpatterns = [
     path('webhook/', WebhookView.as_view(), name='telegram-webhook'),
+    path('webhook', WebhookView.as_view(), name='telegram-webhook-noslash'),
 ]

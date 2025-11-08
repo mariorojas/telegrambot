@@ -12,6 +12,7 @@ This Django project exposes a webhook endpoint that receives Telegram updates an
    ```
    TELEGRAM_BOT_TOKEN=your-bot-token
    TELEGRAM_WEBHOOK_URL=https://public-host/telegram/webhook/  # optional
+   DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,beribboned-vickey-metrically.ngrok-free.dev
    ```
    These values are loaded automatically via `python-dotenv`. You can still override them with standard environment variables.
 

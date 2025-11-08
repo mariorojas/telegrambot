@@ -19,7 +19,6 @@ class WebhookView(View):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
-        print("xxx")
         try:
             payload = json.loads(request.body or "{}")
         except json.JSONDecodeError:
@@ -45,6 +44,6 @@ class WebhookView(View):
 
         if not telegram_client.send_message(chat_id, greeting):
             logger.error("Failed to send greeting to chat %s", chat_id)
-
-        logger.info("ok!!")
+        else:
+            logger.info("Greeting sent to chat %s: %s", chat_id, greeting)
         return HttpResponse(status=200)
