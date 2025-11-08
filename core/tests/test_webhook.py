@@ -1,19 +1,26 @@
-import json
 from unittest import mock
 
-from django.test import Client, TestCase, override_settings
+from django.test import override_settings
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 
-class WebhookViewTests(TestCase):
-    def setUp(self):
-        self.client = Client()
-
+class WebhookViewTests(APITestCase):
     def _post(self, payload: dict):
         return self.client.post(
             "/telegram/webhook/",
-            data=json.dumps(payload),
+            data=payload,
+            format="json",
+        )
+
+    def test_invalid_json_returns_400(self):
+        response = self.client.post(
+            "/telegram/webhook/",
+            data="not-json",
             content_type="application/json",
         )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_webhook_ignores_updates_without_text(self):
         payload = {"message": {"chat": {"id": 1}}}
@@ -21,7 +28,7 @@ class WebhookViewTests(TestCase):
         with mock.patch("core.views.telegram_client.send_message") as send_message:
             response = self._post(payload)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         send_message.assert_not_called()
 
     @override_settings(TELEGRAM_BOT_TOKEN="secret-token")
@@ -39,6 +46,45 @@ class WebhookViewTests(TestCase):
         ) as send_message:
             response = self._post(payload)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         pick_greeting.assert_called_once()
         send_message.assert_called_once_with(99, "Bonjour, Ariana!")
+
+    def test_webhook_requires_chat_id(self):
+        payload = {"message": {"text": "hola"}}
+
+        with mock.patch("core.views.telegram_client.send_message") as send_message:
+            response = self._post(payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        send_message.assert_not_called()
+
+    @override_settings(TELEGRAM_BOT_TOKEN="")
+    def test_webhook_skips_sending_when_token_missing(self):
+        payload = {
+            "message": {
+                "chat": {"id": 5},
+                "text": "Hi",
+            }
+        }
+
+        with mock.patch("core.views.telegram_client.send_message") as send_message:
+            response = self._post(payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        send_message.assert_not_called()
+
+    @override_settings(TELEGRAM_BOT_TOKEN="secret-token")
+    def test_webhook_handles_failed_send(self):
+        payload = {
+            "message": {
+                "chat": {"id": 88},
+                "text": "hello",
+            }
+        }
+
+        with mock.patch("core.views.telegram_client.send_message", return_value=False) as send_message:
+            response = self._post(payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        send_message.assert_called_once_with(88, mock.ANY)
