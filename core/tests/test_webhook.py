@@ -1,20 +1,36 @@
 from unittest import mock
 
+from django.conf import settings
 from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 
 class WebhookViewTests(APITestCase):
-    def _post(self, payload: dict, secret: str | None = None):
+    _DEFAULT_SECRET = object()
+    DEFAULT_SECRET_VALUE = "dummy-test-secret"
+
+    def setUp(self):
+        super().setUp()
+        self._secret_override = override_settings(TELEGRAM_WEBHOOK_SECRET=self.DEFAULT_SECRET_VALUE)
+        self._secret_override.enable()
+
+    def tearDown(self):
+        self._secret_override.disable()
+        super().tearDown()
+
+    def _post(self, payload: dict, secret=_DEFAULT_SECRET):
         path = "/telegram/webhook/"
-        if secret is not None:
-            path = f"{path}?secret={secret}"
+        resolved_secret = secret
+        if secret is self._DEFAULT_SECRET:
+            resolved_secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
+        if resolved_secret is not None and resolved_secret != "":
+            path = f"{path}?secret={resolved_secret}"
         return self.client.post(path, data=payload, format="json")
 
     def test_invalid_json_returns_400(self):
         response = self.client.post(
-            "/telegram/webhook/",
+            f"/telegram/webhook/?secret={self.DEFAULT_SECRET_VALUE}",
             data="not-json",
             content_type="application/json",
         )
@@ -54,7 +70,7 @@ class WebhookViewTests(APITestCase):
         payload = {"message": {"chat": {"id": 11}, "text": "hello"}}
 
         with mock.patch("core.views.telegram_client.send_message") as send_message:
-            response = self._post(payload)
+            response = self._post(payload, secret=None)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         send_message.assert_not_called()
