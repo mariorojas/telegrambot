@@ -8,14 +8,10 @@ This Django project exposes a webhook endpoint that receives Telegram updates an
    ```bash
    pip install -r requirements.txt
    ```
-2. Configure the environment (create a `.env` file in the project root):
-   ```
-   TELEGRAM_BOT_TOKEN=your-bot-token
-   TELEGRAM_WEBHOOK_URL=https://public-host/telegram/webhook/  # optional
-   TELEGRAM_WEBHOOK_SECRET=some-long-random-string            # optional but recommended
-   DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,beribboned-vickey-metrically.ngrok-free.dev
-   ```
-   These values are loaded automatically via `python-dotenv`. You can still override them with standard environment variables.
+2. Configure your environment variables:
+   - Rename `env.example` to `.env` by executing `mv env.example .env`.
+   - Replace the placeholder values with your bot token, webhook URL (if any), and optional webhook secret, allowed hosts, etc.
+   - The project automatically loads `.env` via `python-dotenv`, but you can still override values using standard environment variables.
 
 ## Running Locally
 
