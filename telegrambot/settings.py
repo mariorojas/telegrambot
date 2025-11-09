@@ -33,7 +33,6 @@ DEBUG = True
 default_hosts = [
     "localhost",
     "127.0.0.1",
-    "beribboned-vickey-metrically.ngrok-free.dev",
 ]
 allowed_hosts_env = os.getenv("DJANGO_ALLOWED_HOSTS")
 if allowed_hosts_env:
