@@ -37,8 +37,8 @@ class WebhookViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_webhook_ignores_updates_without_text(self):
-        payload = {"message": {"chat": {"id": 1}}}
+    def test_webhook_ignores_updates_without_message_payload(self):
+        payload = {"callback_query": {"data": "noop"}}
 
         with mock.patch("core.views.telegram_client.send_message") as send_message:
             response = self._post(payload)
@@ -64,6 +64,24 @@ class WebhookViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         pick_greeting.assert_called_once()
         send_message.assert_called_once_with(99, "Bonjour, Ariana!")
+
+    @override_settings(TELEGRAM_BOT_TOKEN="secret-token")
+    def test_webhook_replies_to_non_text_messages(self):
+        payload = {
+            "message": {
+                "chat": {"id": 42},
+                "sticker": {"emoji": "🎉"},
+            }
+        }
+
+        with mock.patch("core.views.pick_greeting", return_value="Hey there!") as pick_greeting, mock.patch(
+            "core.views.telegram_client.send_message", return_value=True
+        ) as send_message:
+            response = self._post(payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        pick_greeting.assert_called_once()
+        send_message.assert_called_once_with(42, "Hey there!")
 
     @override_settings(TELEGRAM_WEBHOOK_SECRET="topsecret")
     def test_webhook_rejects_missing_secret(self):

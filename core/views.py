@@ -36,9 +36,9 @@ class WebhookView(APIView):
 
         logger.debug("Received Telegram payload: %s", payload)
 
-        message = self._extract_text_message(payload)
+        message = self._extract_message(payload)
         if not message:
-            logger.debug("Ignoring update without text message: %s", payload.get("update_id"))
+            logger.debug("Ignoring update without message payload: %s", payload.get("update_id"))
             return Response(status=status.HTTP_200_OK)
 
         chat_id = self._get_chat_id(message)
@@ -54,12 +54,12 @@ class WebhookView(APIView):
         return Response(status=status.HTTP_200_OK)
 
     @staticmethod
-    def _extract_text_message(payload: Payload) -> Optional[Message]:
+    def _extract_message(payload: Payload) -> Optional[Message]:
         if not isinstance(payload, dict):
             return None
 
         message = payload.get("message") or payload.get("edited_message")
-        if isinstance(message, dict) and isinstance(message.get("text"), str):
+        if isinstance(message, dict):
             return message
         return None
 
