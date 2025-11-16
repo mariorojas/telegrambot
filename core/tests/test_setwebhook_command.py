@@ -16,15 +16,17 @@ class SetWebhookCommandTests(TestCase):
                 client_instance = client_cls.return_value
                 client_instance.set_webhook.return_value = True
                 call_command("setwebhook")
-        return client_instance.set_webhook.call_args[0][0]
+        return client_instance.set_webhook.call_args
 
-    def test_appends_secret_to_url_without_query(self):
-        result_url = self._call(url="https://example.com/hook", secret="topsecret")
-        self.assertEqual(result_url, "https://example.com/hook?secret=topsecret")
+    def test_passes_secret_token_when_provided(self):
+        call_args = self._call(url="https://example.com/hook", secret="topsecret")
+        self.assertEqual(call_args.args, ("https://example.com/hook",))
+        self.assertEqual(call_args.kwargs, {"secret_token": "topsecret"})
 
-    def test_appends_secret_to_url_with_existing_query(self):
-        result_url = self._call(url="https://example.com/hook?foo=bar", secret="topsecret")
-        self.assertEqual(result_url, "https://example.com/hook?foo=bar&secret=topsecret")
+    def test_preserves_existing_query_params(self):
+        call_args = self._call(url="https://example.com/hook?foo=bar", secret="topsecret")
+        self.assertEqual(call_args.args, ("https://example.com/hook?foo=bar",))
+        self.assertEqual(call_args.kwargs, {"secret_token": "topsecret"})
 
     def test_uses_plain_url_when_secret_missing(self):
         with override_settings(
@@ -37,7 +39,7 @@ class SetWebhookCommandTests(TestCase):
                 client_instance.set_webhook.return_value = True
                 call_command("setwebhook")
 
-        client_cls.return_value.set_webhook.assert_called_once_with("https://example.com/hook")
+        client_cls.return_value.set_webhook.assert_called_once_with("https://example.com/hook", secret_token=None)
 
     def test_raises_when_webhook_registration_fails(self):
         with override_settings(

@@ -24,15 +24,17 @@ class WebhookViewTests(APITestCase):
         resolved_secret = secret
         if secret is self._DEFAULT_SECRET:
             resolved_secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
+        headers = {}
         if resolved_secret is not None and resolved_secret != "":
-            path = f"{path}?secret={resolved_secret}"
-        return self.client.post(path, data=payload, format="json")
+            headers["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"] = resolved_secret
+        return self.client.post(path, data=payload, format="json", **headers)
 
     def test_invalid_json_returns_400(self):
         response = self.client.post(
-            f"/telegram/webhook/?secret={self.DEFAULT_SECRET_VALUE}",
+            "/telegram/webhook/",
             data="not-json",
             content_type="application/json",
+            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN=self.DEFAULT_SECRET_VALUE,
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

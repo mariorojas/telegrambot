@@ -86,4 +86,5 @@ class WebhookView(APIView):
         secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
         if not secret:
             return True
-        return request.query_params.get("secret") == secret
+        header_value = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        return header_value == secret

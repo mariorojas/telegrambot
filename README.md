@@ -29,7 +29,7 @@ python manage.py setwebhook --url https://your-id.ngrok.app/telegram/webhook/
 ```
 If `TELEGRAM_WEBHOOK_URL` is set, you can omit `--url`.
 
-When `TELEGRAM_WEBHOOK_SECRET` is defined, the management command automatically appends `?secret=<value>` (or `&secret=` if other query params exist) to the URL sent to Telegram. Telegram will then include that query parameter in every webhook request, and the Django view will reject requests without the correct secret.
+When `TELEGRAM_WEBHOOK_SECRET` is defined, the management command sends it as `secret_token` to Telegram. Telegram includes the same value in the `X-Telegram-Bot-Api-Secret-Token` header for each webhook call, and the Django view rejects requests whose header value does not match.
 
 ## Testing
 

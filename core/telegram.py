@@ -45,10 +45,12 @@ class TelegramClient:
             },
         )
 
-    def set_webhook(self, url: str) -> bool:
+    def set_webhook(self, url: str, secret_token: str | None = None) -> bool:
+        payload: Dict[str, Any] = {"url": url}
+        if secret_token:
+            payload["secret_token"] = secret_token
+
         return self._post(
             "setWebhook",
-            {
-                "url": url,
-            },
+            payload,
         )
