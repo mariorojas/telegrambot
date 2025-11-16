@@ -58,18 +58,13 @@ class WebhookView(APIView):
     def _extract_message(payload: Payload) -> Optional[Message]:
         if not isinstance(payload, dict):
             return None
-
         message = payload.get("message") or payload.get("edited_message")
-        if isinstance(message, dict):
-            return message
-        return None
+        return message if isinstance(message, dict) else None
 
     @staticmethod
     def _get_chat_id(message: Message) -> Optional[int]:
         chat = message.get("chat")
-        if isinstance(chat, dict):
-            return chat.get("id")
-        return None
+        return chat.get("id") if isinstance(chat, dict) else None
 
     @staticmethod
     def _prepare_greeting(message: Message) -> str:
@@ -77,7 +72,8 @@ class WebhookView(APIView):
 
     @staticmethod
     def _send_greeting(chat_id: int, greeting: str) -> bool:
-        if not settings.TELEGRAM_BOT_TOKEN:
+        token = settings.TELEGRAM_BOT_TOKEN
+        if not token:
             logger.error("TELEGRAM_BOT_TOKEN is not configured; cannot respond.")
             return False
         return telegram_client.send_message(chat_id, greeting)
@@ -88,7 +84,5 @@ class WebhookView(APIView):
             return True
         if not settings.TELEGRAM_WEBHOOK_SECRET:
             return False
-        return secrets.compare_digest(
-            request.headers.get("X-Telegram-Bot-Api-Secret-Token", ""),
-            settings.TELEGRAM_WEBHOOK_SECRET,
-        )
+        header = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+        return secrets.compare_digest(header, settings.TELEGRAM_WEBHOOK_SECRET)

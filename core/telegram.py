@@ -20,11 +20,7 @@ class TelegramClient:
 
     def _post(self, method: str, payload: Dict[str, Any]) -> bool:
         try:
-            response = requests.post(
-                self._build_url(method),
-                json=payload,
-                timeout=10,
-            )
+            response = requests.post(self._build_url(method), json=payload, timeout=10)
             response.raise_for_status()
             data = response.json()
         except Exception:
@@ -37,20 +33,9 @@ class TelegramClient:
         return True
 
     def send_message(self, chat_id: int | str, text: str) -> bool:
-        return self._post(
-            "sendMessage",
-            {
-                "chat_id": chat_id,
-                "text": text,
-            },
-        )
+        return self._post("sendMessage", {"chat_id": chat_id, "text": text})
 
     def set_webhook(self, url: str, secret_token: str | None = None) -> bool:
-        payload: Dict[str, Any] = {"url": url}
-        if secret_token:
-            payload["secret_token"] = secret_token
+        payload: Dict[str, Any] = {"url": url, **({"secret_token": secret_token} if secret_token else {})}
 
-        return self._post(
-            "setWebhook",
-            payload,
-        )
+        return self._post("setWebhook", payload)
