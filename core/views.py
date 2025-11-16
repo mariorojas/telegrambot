@@ -1,4 +1,5 @@
 import logging
+import secrets
 from typing import Any, Dict, Optional
 
 from django.conf import settings
@@ -83,8 +84,11 @@ class WebhookView(APIView):
 
     @staticmethod
     def _is_authorized(request) -> bool:
-        secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
-        if not secret:
+        if settings.DEBUG and not settings.TELEGRAM_WEBHOOK_SECRET:
             return True
-        header_value = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
-        return header_value == secret
+        if not settings.TELEGRAM_WEBHOOK_SECRET:
+            return False
+        return secrets.compare_digest(
+            request.headers.get("X-Telegram-Bot-Api-Secret-Token", ""),
+            settings.TELEGRAM_WEBHOOK_SECRET,
+        )

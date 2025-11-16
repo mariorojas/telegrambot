@@ -19,14 +19,12 @@ class Command(BaseCommand):
         if not url:
             raise CommandError("Provide --url or set TELEGRAM_WEBHOOK_URL in your environment.")
 
-        token = settings.TELEGRAM_BOT_TOKEN
-        if not token:
+        if not settings.TELEGRAM_BOT_TOKEN:
             raise CommandError("TELEGRAM_BOT_TOKEN is missing; set it before registering the webhook.")
 
-        client = TelegramClient(token=token)
-        secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
+        client = TelegramClient(token=settings.TELEGRAM_BOT_TOKEN)
 
-        if not client.set_webhook(url, secret_token=secret or None):
+        if not client.set_webhook(url, secret_token=settings.TELEGRAM_WEBHOOK_SECRET or None):
             raise CommandError(f"Failed to register webhook with Telegram using URL {url}")
 
         self.stdout.write(self.style.SUCCESS(f"Webhook successfully set to {url}"))

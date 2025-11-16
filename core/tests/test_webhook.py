@@ -23,7 +23,7 @@ class WebhookViewTests(APITestCase):
         path = "/telegram/webhook/"
         resolved_secret = secret
         if secret is self._DEFAULT_SECRET:
-            resolved_secret = getattr(settings, "TELEGRAM_WEBHOOK_SECRET", "")
+            resolved_secret = settings.TELEGRAM_WEBHOOK_SECRET
         headers = {}
         if resolved_secret is not None and resolved_secret != "":
             headers["HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN"] = resolved_secret
